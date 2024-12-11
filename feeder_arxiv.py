@@ -55,20 +55,19 @@ def clean_summary(summary):
 def create_post_with_link(client, paper):
     """Create a Bluesky post with properly formatted link after the title."""
     # Clean and truncate the summary
-    clean_abstract = clean_summary(paper["summary"])
-    short_summary = (
-        clean_abstract[:250] if len(clean_abstract) > 250 else clean_abstract
-    )
+    short_summary = clean_summary(paper["summary"])
+    short_summary = short_summary.replace("\n"," ").replace("\r"," ")
 
     # Start with the title
-    title_text = f"arxiv 📄 {paper['title'].strip()}\n"
+    title_text = f"arxiv 📄 {paper['title'].strip()}"
+    title_text = title_text.replace("\n"," ").replace("\r"," ")
 
     # Calculate where the link will go
     link_start = len(title_text)
     link_end = link_start + len(paper["link"])
 
     # Create the full post text
-    post_text = f"{title_text}\n\n{paper['link']}\n{short_summary}"
+    post_text = f"{title_text}\n{paper['link']}\n{short_summary}"
 
     # Create facet for the URL
     facets = [
@@ -127,6 +126,17 @@ def fetch_latest_papers(base_url):
     return papers
 
 
+def debug_format(papers, client, tracker):
+    for paper in papers:
+        try:
+            print(f"Checking paper: {paper['title']}")
+            post_text, facets = create_post_with_link(client, paper)
+
+            print(post_text)
+            print("\n")
+        except Exception as e:
+            print(f"Error???: {str(e)}")
+
 def post_papers_to_bluesky(papers, client, tracker):
     for paper in papers:
         if tracker.is_posted(paper["arxiv_id"]):
@@ -163,6 +173,8 @@ if __name__ == "__main__":
     base_url = "http://export.arxiv.org/api/query?search_query=cat:cs.AR+AND+(abs:LLM+OR+abs:Agent)&start=0&max_results=100&sortBy=submittedDate&sortOrder=descending"
     # base_url = 'http://export.arxiv.org/rss/cs.AR'
     papers = fetch_latest_papers(base_url)
+    #debug_format(papers, client, tracker)
+    #exit(0)
     post_papers_to_bluesky(papers, client, tracker)
 
     base_url = "http://export.arxiv.org/api/query?search_query=cat:cs.SE+AND+(abs:LLM+OR+abs:Agent)&start=0&max_results=10&sortBy=submittedDate&sortOrder=descending"
