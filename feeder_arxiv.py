@@ -51,16 +51,22 @@ def clean_summary(summary):
         return clean_text
     return summary
 
+def clean_string(sentence: str) -> str:
+    """
+    Removes redundant spaces from a sentence and newlines
+    """
+    sentence = sentence.replace("\n"," ").replace("\r"," ")
+    return ' '.join(sentence.split())
 
 def create_post_with_link(client, paper):
     """Create a Bluesky post with properly formatted link after the title."""
     # Clean and truncate the summary
-    short_summary = clean_summary(paper["summary"])
-    short_summary = short_summary.replace("\n"," ").replace("\r"," ")
+    short_summary = clean_string(clean_summary(paper["summary"]))
+    short_summary = "\n" + short_summary
 
     # Start with the title
-    title_text = f"arxiv 📄 {paper['title'].strip()}"
-    title_text = title_text.replace("\n"," ").replace("\r"," ")
+    title_text = clean_string(f"arxiv 📄 {paper['title'].strip()}")
+    title_text = title_text + "\n"
 
     # Calculate where the link will go
     link_start = len(title_text)
@@ -107,10 +113,10 @@ def fetch_latest_papers(base_url):
         if not opt1 and not opt2 and not opt3 and not opt4 and not opt5:
             continue
 
-        opt1 = re.search(r"LLM", entry.summary, re.IGNORECASE)
-        opt2 = re.search(r"Agent", entry.summary, re.IGNORECASE)
+        opt1 = re.search(r"Agent", entry.summary, re.IGNORECASE)
+        #opt2 = re.search(r"LLM", entry.summary, re.IGNORECASE)
 
-        if not opt1 and not opt2:
+        if not opt1:
             continue
 
         paper = {
